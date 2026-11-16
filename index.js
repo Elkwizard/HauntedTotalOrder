@@ -1,4 +1,4 @@
-const MAX_ROUND = 10;
+const MAX_ROUND = 5;
 const MIN_CARD = 0;
 const MAX_CARD = 100;
 const MIN_COLOR = [238, 238, 255];
