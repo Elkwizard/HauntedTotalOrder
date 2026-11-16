@@ -1,12 +1,20 @@
-const MAX_ROUND = 5;
+const MAX_ROUND = 10;
 const MIN_CARD = 0;
 const MAX_CARD = 100;
+const MIN_COLOR = [238, 238, 255];
+const MAX_COLOR = [238, 255, 239];
 let round = 0;
+let won = false;
 
 const $ = id => document.getElementById(id);
 
 function getCard() {
-	return String(MIN_CARD + Math.floor((MAX_CARD - MIN_CARD + 1) * Math.random()));
+	const t = Math.random();
+	const value = MIN_CARD + Math.floor((MAX_CARD - MIN_CARD + 1) * t);
+	const color = `rgb(${MIN_COLOR.map((v, i) => {
+		return v * (1 - t) + MAX_COLOR[i] * t;
+	})}`;
+	return { value, color };
 }
 
 function getHand(length) {
@@ -14,13 +22,14 @@ function getHand(length) {
 	do {
 		hand = Array.from({ length }, getCard);
 	} while (new Set(hand).size < hand.length);
-	return hand;
+	return hand.sort((a, b) => a.value - b.value);
 }
 
 function showOverlay(card) {
 	const overlay = $("overlay");
 	overlay.classList.remove("hidden");
-	overlay.textContent = card;
+	overlay.textContent = card.value;
+	overlay.style.background = card.color;
 }
 
 function hideOverlay() {
@@ -29,7 +38,8 @@ function hideOverlay() {
 
 function createCardHTML(card) {
 	const button = document.createElement("button");
-	button.textContent = card;
+	button.textContent = card.value;
+	button.style.background = card.color;
 	button.addEventListener("click", () => {
 		showOverlay(card);
 		button.remove();
@@ -43,7 +53,11 @@ function createCardHTML(card) {
 function nextRound() {
 	round++;
 	if (round > MAX_ROUND) {
-		showOverlay("");
+		showOverlay({
+			value: "WE WON!",
+			color: "lime"
+		});
+		won = true;
 		document.body.classList.add("victory");
 	}
 	$("next").disabled = true;
@@ -52,10 +66,21 @@ function nextRound() {
 		$("cards").appendChild(createCardHTML(card));
 }
 
+function restart() {
+	if (won || confirm("Restart?"))
+		location.reload();
+}
+
 addEventListener("load", () => {
-	$("overlay").addEventListener("click", hideOverlay);
+	$("overlay").addEventListener("click", () => {
+		if (won) {
+			restart();
+		} else {
+			hideOverlay();
+		}
+	});
 	$("next").addEventListener("click", nextRound);
-	$("restart").addEventListener("click", () => location.reload());
+	$("restart").addEventListener("click", restart);
 
 	nextRound();
 });
